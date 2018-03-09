@@ -16,6 +16,7 @@ def meet_data_scraper(url, verbose = False):
 	#import the required libraries
 	from bs4 import BeautifulSoup as bs
 	from requests import get
+	import string
 
 	#convert the url to text for parsing
 	page_source = bs(get(url).text, 'html.parser')
@@ -28,49 +29,28 @@ def meet_data_scraper(url, verbose = False):
 	
 	#get the meet name as a text file
 	n_o_meet = str(page_source.find('h2', class_='mBottom0 mTop0').text)
-	meet_name, meet_id,  race_level, = meet_id_generator(n_o_meet)
 
 	#get the date
 	date_of_race = str(page_source.find('span', class_='text-info').b.text)
-	split_date = date_of_race.split(' ')
+	dateorace = string.replace(date_of_race, ',', '')
+	split_date = dateorace.split(' ')
 
-	meet_name, race_level, meet_id = meet_id_generator(n_o_meet, date_of_race)
-	'''
-	#get the date
-	date_of_race = str(page_source.find('span', class_='text-info').b.text)
-	split_date = date_of_race.split(' ')
-	
-	#create the race id
-	id = ''
-	#append the first letters of every word in the title
-	for x in split_name:
-			id += x[0].lower()
-	#add the year
-	#2-5 is the last two characters if the date string
-	id += split_date[len(split_date) - 1][2:5]
-
-	#get the race level (HS or college)
-	#there are only two levels, HS and collegiate
-	#so the level can be identified from the last letter
-	if meet_name[len(meet_name) - 1] == 'S':
-		race_level = 'HS'
-	else:
-		race_level = 'Collegiate'
-	
-	#clean the race level off the race name string
-	del split_name[len(split_name) - 1]
-	meet_name = ' '.join(split_name)
-	'''
+	meet_name, race_level, meet_id = meet_id_generator(n_o_meet, dateorace)
 	#split the data into M/F
 	male_results = page_source.find('div', id ='gender_M')
 	female_results = page_source.find('div', id ='gender_F')
 
 	#get the number of races and race distance
-	male_races = male_results.find_all('div', class_= 'table-responsive')
-	female_races = female_results.find_all('div', class_= 'table-responsive')
+	male_races = male_results.find_all('tbody', class_= 'DivBody')
+	female_races = female_results.find_all('tbody', class_= 'DivBody')
 	
-	m_runners = male_races[0].find_all('tr', class_= 'A')
-	f_runners = female_races[0].find_all('tr', class_= 'A')
+	m_runners = []
+	f_runners = []
+	for m,f in zip(male_races, female_races):
+		if str(m.h4.text).split(' ')[0] == '5,000':
+			m_runners += m.find_all('tr', class_="A")
+		if str(f.h4.text).split(' ')[0] == '5,000':
+			f_runners += f.find_all('tr', class_="A")
 	
 	#iterate through the male runners
 	athlete = []
@@ -85,7 +65,6 @@ def meet_data_scraper(url, verbose = False):
 			runner_gender.append('M')
 		except IndexError:
 			pass
-		
 		pos +=1
 		
 	#iterate through the female runners
@@ -109,7 +88,7 @@ def meet_data_scraper(url, verbose = False):
 	
 	if verbose == True:
 		print "Race Scraper summary for: "
-		print meet_name, ' meet id: ', id
+		print meet_name, ' meet id: ', meet_id
 		print "-----------------------"
 		print 'First Row: ', [item[0] for item in data_dict.values()]
 		print "Number of Names\t", len(runner_name)
@@ -118,7 +97,7 @@ def meet_data_scraper(url, verbose = False):
 	race_data = {'meet_name': meet_name, 
 	'meet_id': meet_id,
 	'race_level': race_level,
-	'date_of_race': date_of_race,
+	'date_of_race': dateorace,
 	'data': data_dict
 	}
 	return	race_data  
@@ -239,7 +218,7 @@ def meet_id_generator(meet, date):
 	#get the race level (HS or college)
 	#there are only two levels, HS and collegiate
 	#so the level can be identified from the last letter
-	if meetname[len(meetname) - 1] == 'S':
+	if meet[len(meet) - 1] == 'S':
 		racelevel = 'HS'
 	else:
 		racelevel = 'Collegiate'
