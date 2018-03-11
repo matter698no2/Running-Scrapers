@@ -127,7 +127,7 @@ def runner_id_generator(name, school):
 		
 	return generated_ids
 
-def write_to_csv(data, distance, meetcsv, runnercsv, timecsv, permission):
+def write_to_csv(data, distance, permission, meetcsv = '', runnercsv = '', timecsv = ''):
 	'''
 	Takes in the dictionary returned in meet scraper, and the distance run in the races
 	specify the paths of the csv files in meet, runner, and time csv
@@ -137,44 +137,47 @@ def write_to_csv(data, distance, meetcsv, runnercsv, timecsv, permission):
 	import csv
 	
 	#define and open the files
-	meet_info = open(meetcsv, permission)
-	runner_info = open(runnercsv, permission)
-	time_info = open(timecsv, permission)
+	#meet_info = open(meetcsv, permission)
+	#runner_info = open(runnercsv, permission)
+	#time_info = open(timecsv, permission)
 	
-	#write to meet_info
-	with meet_info:
-		meet_writer = csv.DictWriter(meet_info, fieldnames = ['meet_id', 'meet_name', 'day_temperature', 'date_of_race', 'total_finishers', 'total_races', 'race_level'])
-		if permission == 'w':
-			meet_writer.writeheader()
-		meet_writer.writerow({'meet_id': data['meet_id'], 'meet_name': data['meet_name'], 'date_of_race': data['date_of_race'],
-		'day_temperature': ' ', 'total_finishers': len(data['data']['runner_name']), 'total_races': ' ', 'race_level': data['race_level']})
-	
-	run_keys = sorted(data['data'].keys())
-	with runner_info:
-		runner_writer = csv.writer(runner_info)
-		if permission == 'w':
-			runner_writer.writerow(run_keys)
-		runner_writer.writerows(zip(*[data['data'][key] for key in run_keys]))
+	#write meet info if specified
+	if meetcsv != '':
+		with open(meetcsv, permission) as meet_info:
+			meet_writer = csv.DictWriter(meet_info, fieldnames = ['meet_id', 'meet_name', 'day_temperature', 'date_of_race', 'total_finishers', 'total_races', 'race_level'])
+			if permission == 'w':
+				meet_writer.writeheader()
+			meet_writer.writerow({'meet_id': data['meet_id'], 'meet_name': data['meet_name'], 'date_of_race': data['date_of_race'],
+			'day_temperature': ' ', 'total_finishers': len(data['data']['runner_name']), 'total_races': ' ', 'race_level': data['race_level']})
+			
+	#write runner data if needed
+	if runnercsv != '':
+		run_keys = sorted(data['data'].keys())
+		with open(runnercsv, permission) as runner_info:
+			runner_writer = csv.writer(runner_info)
+			if permission == 'w':
+				runner_writer.writerow(run_keys)
+			runner_writer.writerows(zip(*[data['data'][key] for key in run_keys]))
 		
-	
-	#create the data for time info
-	runids = data['data']['runner_ids']
-	totalmeetids = []
-	totaldist = []
-	x = 0
-	while x < len(runids):
-		totalmeetids.append(data['meet_id'])
-		totaldist.append(distance)
-		x+=1
+	if timecsv != '':
+		#create the data for time info
+		runids = data['data']['runner_ids']
+		totalmeetids = []
+		totaldist = []
+		x = 0
+		while x < len(runids):
+			totalmeetids.append(data['meet_id'])
+			totaldist.append(distance)
+			x+=1
 		
-	finishtime = data['data']['finish_time']
-	with time_info:
-		time_writer = csv.writer(time_info)
+		finishtime = data['data']['finish_time']
+		with open(timecsv, permission) as time_info:
+			time_writer = csv.writer(time_info)
 
-		if permission == 'w':
-			time_writer.writerow(['runner_id', 'meet_id', 'race_distance', 'finish_time'])
-
-		time_writer.writerows(zip(runids,totalmeetids,totaldist,finishtime))
+			if permission == 'w':
+				time_writer.writerow(['runner_id', 'meet_id', 'race_distance', 'finish_time'])
+	
+			time_writer.writerows(zip(runids,totalmeetids,totaldist,finishtime))
 		
 
 

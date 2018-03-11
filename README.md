@@ -18,10 +18,10 @@ ids are formatted like:
 Matthew Rogers, Hidden Valley => matrogHV
 Jen Flemming, Blacksburg => jenflemB
 
-3. write_to_csv(data, distance, meetcsv, runnercsv, timecsv, permission)
+3. write_to_csv(data, distance, permission, meetcsv, runnercsv, timecsv)
 Takes a dictionary formatted like the one returned in meet_data_scraper and writes the information to csvs as specified
  - distance should either be 5000 or 8000, the scraper automatically ignores anything other than that
- - meetcsv, runnercsv, and timecsv are paths ('C:\\path...) they are NOT optional as of this revision
+ - meetcsv, runnercsv, and timecsv are paths ('C:\\path...) you MUST define the path as meetcsv = 'C:\\path...' or it wont work. The order of the csv paths don't matter
  - permission is a string ('w', 'a')
 
 4. pr_scrubber(time)
@@ -39,4 +39,3 @@ Just to keep track of the stuff I want to add or improve
  - Mark whether a runner ran a PR at the meet
  - Get the runner's grade (if applicable)
  - General debugging and scenario checking
- - Make the CSV paths optional in write_to_csv

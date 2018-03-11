@@ -1,6 +1,12 @@
-from meet_scraper import meet_data_scraper
-from meet_scraper import write_to_csv
+import meet_scraper as ms
 
-scraped_data = meet_data_scraper('https://www.athletic.net/CrossCountry/Results/Meet.aspx?Meet=34300', verbose = True)
+#define paths to data here
+meet = 'C:\\Users\\matte\\Desktop\\Project Footrace\\Data\\meet_info.csv'
+runners = 'C:\\Users\\matte\\Desktop\\Project Footrace\\Data\\runner_info.csv'
+times = 'C:\\Users\\matte\\Desktop\\Project Footrace\\Data\\time_info.csv'
 
-write_to_csv(scraped_data, 5000, 'C:\\Users\\Matthew\\Documents\\meetdata.csv', 'C:\\Users\\Matthew\\Documents\\runners.csv', 'C:\\Users\\Matthew\\Documents\\timedata', 'w')
+#call the function
+scraped_data = ms.meet_data_scraper('https://www.athletic.net/CrossCountry/Results/Meet.aspx?Meet=34300', verbose = True)
+
+#csvs are in the order meetcsv, runnercsv, timecsv
+ms.write_to_csv(scraped_data, 5000, 'w', meet, runners, times)
