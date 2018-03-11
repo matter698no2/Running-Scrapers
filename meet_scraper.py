@@ -136,28 +136,24 @@ def write_to_csv(data, distance, meetcsv, runnercsv, timecsv, permission):
 	#get the required library
 	import csv
 	
-	#define the files
+	#define and open the files
 	meet_info = open(meetcsv, permission)
 	runner_info = open(runnercsv, permission)
 	time_info = open(timecsv, permission)
 	
-	#create the fieldnames
-	meet_fnames = ['meet_id', 'meet_name', 'day_temperature', 'date_of_race', 'total_finishers', 'total_races', 'race_level']
-	time_fnames = ['runner_id', 'meet_id', 'race_distance', 'finish_time']
-	
-	
-	
 	#write to meet_info
 	with meet_info:
-		meet_writer = csv.DictWriter(meet_info, fieldnames = meet_fnames)
-		meet_writer.writeheader()
+		meet_writer = csv.DictWriter(meet_info, fieldnames = ['meet_id', 'meet_name', 'day_temperature', 'date_of_race', 'total_finishers', 'total_races', 'race_level'])
+		if permission == 'w':
+			meet_writer.writeheader()
 		meet_writer.writerow({'meet_id': data['meet_id'], 'meet_name': data['meet_name'], 'date_of_race': data['date_of_race'],
 		'day_temperature': ' ', 'total_finishers': len(data['data']['runner_name']), 'total_races': ' ', 'race_level': data['race_level']})
 	
 	run_keys = sorted(data['data'].keys())
 	with runner_info:
 		runner_writer = csv.writer(runner_info)
-		runner_writer.writerow(run_keys)
+		if permission == 'w':
+			runner_writer.writerow(run_keys)
 		runner_writer.writerows(zip(*[data['data'][key] for key in run_keys]))
 		
 	

@@ -18,6 +18,25 @@ ids are formatted like:
 Matthew Rogers, Hidden Valley => matrogHV
 Jen Flemming, Blacksburg => jenflemB
 
-3. write_to_csv(data, distance)
-Still a wip, but will take the dictionary returned in #1 and print the info to
-csv files. 
+3. write_to_csv(data, distance, meetcsv, runnercsv, timecsv, permission)
+Takes a dictionary formatted like the one returned in meet_data_scraper and writes the information to csvs as specified
+ - distance should either be 5000 or 8000, the scraper automatically ignores anything other than that
+ - meetcsv, runnercsv, and timecsv are paths ('C:\\path...) they are NOT optional as of this revision
+ - permission is a string ('w', 'a')
+
+4. pr_scrubber(time)
+on Athletic.net, if a runner runs a PR, it's included in the time string. That's annoying and messes up my dataset rn, I don't want it. This simply takes the time as a string, checks to see if 'PR' is there, and if it is, remove it. 
+
+5. meet_id_generator(meet, date)
+This was supposed to me simple, but sort of ballooned a bit. This makes the meet id, so if the meet was Clash with the Titans 2014, the id is cwtt14. 
+This returns:
+ - a cleaned version of the meet name
+ - the race level (HS or Collegiate)
+ - the race id
+
+## Planned Features
+Just to keep track of the stuff I want to add or improve
+ - Mark whether a runner ran a PR at the meet
+ - Get the runner's grade (if applicable)
+ - General debugging and scenario checking
+ - Make the CSV paths optional in write_to_csv
