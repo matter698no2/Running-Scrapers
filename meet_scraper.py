@@ -22,6 +22,7 @@ def meet_data_scraper(url, verbose = False):
 	page_source = bs(get(url).text, 'html.parser')
 
 	#create the dict/lists to be appended to the various csv documents
+	runner_year = []
 	runner_name = []
 	runner_school = []
 	runner_gender = []
@@ -29,7 +30,9 @@ def meet_data_scraper(url, verbose = False):
 	
 	#get the meet name as a text file
 	n_o_meet = str(page_source.find('h2', class_='mBottom0 mTop0').text)
-
+	
+	vhsl_level = vhsl_level_finder(n_o_meet)
+	
 	#get the date
 	date_of_race = str(page_source.find('span', class_='text-info').b.text)
 	dateorace = string.replace(date_of_race, ',', '')
@@ -47,9 +50,9 @@ def meet_data_scraper(url, verbose = False):
 	m_runners = []
 	f_runners = []
 	for m,f in zip(male_races, female_races):
-		if str(m.h4.text).split(' ')[0] == '5,000':
+		if str(m.h4.text).split(' ')[0] == '5,000' or '8,000':
 			m_runners += m.find_all('tr', class_="A")
-		if str(f.h4.text).split(' ')[0] == '5,000':
+		if str(f.h4.text).split(' ')[0] == '5,000' or '8,000':
 			f_runners += f.find_all('tr', class_="A")
 	
 	#iterate through the male runners
@@ -57,12 +60,17 @@ def meet_data_scraper(url, verbose = False):
 	pos = 0
 	while pos < len(m_runners):
 		try:
-			athlete = m_runners[pos].find_all('a')
-			runner_name.append(str(athlete[0].text))
-			scrubbed_time = pr_scrubber(str(athlete[1].text))
-			finish_time.append(scrubbed_time)
-			runner_school.append(str(athlete[2].text))
-			runner_gender.append('M')
+			if len(m_runners[pos].find_all('a')) == 3:
+				athlete = m_runners[pos].find_all('a')
+				year_placeholder = m_runners[pos].find_all('td')[1:2]
+				runner_year.append(str(year_placeholder[0].text))
+				runner_name.append(str(athlete[0].text))
+				scrubbed_time = pr_scrubber(str(athlete[1].text))
+				finish_time.append(scrubbed_time)
+				runner_school.append(str(athlete[2].text))
+				runner_gender.append('M')
+			else: 
+				pass
 		except IndexError:
 			pass
 		pos +=1
@@ -72,23 +80,30 @@ def meet_data_scraper(url, verbose = False):
 	pos = 0
 	while pos < len(f_runners):
 		try:
-			athlete = f_runners[pos].find_all('a')
-			runner_name.append(str(athlete[0].text))
-			scrubbed_time = pr_scrubber(str(athlete[1].text))
-			finish_time.append(scrubbed_time)
-			runner_school.append(str(athlete[2].text))
-			runner_gender.append('F')
+			if len(f_runners[pos].find_all('a')) == 3:
+				athlete = f_runners[pos].find_all('a')
+				year_placeholder = f_runners[pos].find_all('td')[1:2]
+				runner_year.append(str(year_placeholder[0].text))
+				runner_name.append(str(athlete[0].text))
+				scrubbed_time = pr_scrubber(str(athlete[1].text))
+				finish_time.append(scrubbed_time)
+				runner_school.append(str(athlete[2].text))
+				runner_gender.append('F')
+			else:
+				pass
 		except IndexError:
 			pass
 		pos +=1
 	#generate a list of ids for each runner
 	runner_ids = runner_id_generator(runner_name, runner_school)
 
-	data_dict = {'runner_ids': runner_ids, 'runner_name': runner_name, 'runner_school': runner_school, 'finish_time': finish_time, 'runner_gender': runner_gender}
+	data_dict = {'runner_ids': runner_ids, 'runner_name': runner_name, 'runner_year': runner_year, 'runner_school': runner_school, 'finish_time': finish_time, 'runner_gender': runner_gender}
 	
 	if verbose == True:
 		print "Race Scraper summary for: "
-		print meet_name, ' meet id: ', meet_id
+		print meet_name, ' meet id: ', meet_id,
+		if vhsl_level != '':
+			print '\t VHSL group: ', vhsl_level
 		print "-----------------------"
 		print 'First Row: ', [item[0] for item in data_dict.values()]
 		print "Number of Names\t", len(runner_name)
@@ -100,6 +115,8 @@ def meet_data_scraper(url, verbose = False):
 	'date_of_race': dateorace,
 	'data': data_dict
 	}
+	if vhsl_level != '':
+		race_data['VHSL_group'] = vhsl_level
 	return	race_data  
 
 def runner_id_generator(name, school):
@@ -135,18 +152,13 @@ def write_to_csv(data, distance, permission, meetcsv = '', runnercsv = '', timec
 	'''
 	#get the required library
 	import csv
-	
-	#define and open the files
-	#meet_info = open(meetcsv, permission)
-	#runner_info = open(runnercsv, permission)
-	#time_info = open(timecsv, permission)
-	
 	#write meet info if specified
 	if meetcsv != '':
 		with open(meetcsv, permission) as meet_info:
 			meet_writer = csv.DictWriter(meet_info, fieldnames = ['meet_id', 'meet_name', 'day_temperature', 'date_of_race', 'total_finishers', 'total_races', 'race_level'])
 			if permission == 'w':
 				meet_writer.writeheader()
+			
 			meet_writer.writerow({'meet_id': data['meet_id'], 'meet_name': data['meet_name'], 'date_of_race': data['date_of_race'],
 			'day_temperature': ' ', 'total_finishers': len(data['data']['runner_name']), 'total_races': ' ', 'race_level': data['race_level']})
 			
@@ -164,10 +176,12 @@ def write_to_csv(data, distance, permission, meetcsv = '', runnercsv = '', timec
 		runids = data['data']['runner_ids']
 		totalmeetids = []
 		totaldist = []
+		totallevel = []
 		x = 0
 		while x < len(runids):
 			totalmeetids.append(data['meet_id'])
 			totaldist.append(distance)
+			totallevel.append(data['VHSL_group'])
 			x+=1
 		
 		finishtime = data['data']['finish_time']
@@ -175,9 +189,9 @@ def write_to_csv(data, distance, permission, meetcsv = '', runnercsv = '', timec
 			time_writer = csv.writer(time_info)
 
 			if permission == 'w':
-				time_writer.writerow(['runner_id', 'meet_id', 'race_distance', 'finish_time'])
+				time_writer.writerow(['runner_id', 'VHSL_group', 'meet_id', 'race_distance', 'finish_time'])
 	
-			time_writer.writerows(zip(runids,totalmeetids,totaldist,finishtime))
+			time_writer.writerows(zip(runids,totallevel,totalmeetids,totaldist,finishtime))
 		
 
 
@@ -227,3 +241,13 @@ def meet_id_generator(meet, date):
 	meetname = ' '.join(split_name)
 
 	return meetname, racelevel, raceid
+
+def vhsl_level_finder(meet):
+	level_index = ['1A','2A','3A','4A','5A','6A'] 
+	split_meet = meet.split(' ')
+	
+	if split_meet[1] in level_index:
+		level = split_meet[1]
+	else:
+		level = ''
+	return level
