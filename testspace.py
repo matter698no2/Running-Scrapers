@@ -19,7 +19,7 @@ requests = 0
 
 #call the function
 scraped_data = ms.meet_data_scraper('https://www.athletic.net/CrossCountry/Results/Meet.aspx?Meet=143681', verbose = True)
-ms.write_to_csv(scraped_data, 5000, 'w', meet, runners, times)
+ms.write_to_csv(scraped_data, 5000, 'wb', meet, runners, times)
 
 sleep(randint(2,5))
 requests += 1
@@ -30,7 +30,7 @@ for year_url in urls:
 	url = 'https://www.athletic.net/CrossCountry/Results/Meet.aspx?Meet=' + str(year_url)
 	
 	scraped_data = ms.meet_data_scraper(url, verbose = True)
-	ms.write_to_csv(scraped_data, 5000, 'a', meet, runners, times)
+	ms.write_to_csv(scraped_data, 5000, 'ab', meet, runners, times)
 	
 	sleep(randint(2,5))
 	requests += 1

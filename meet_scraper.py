@@ -99,6 +99,7 @@ def meet_data_scraper(url, verbose = False):
 
 	data_dict = {'runner_ids': runner_ids, 'runner_name': runner_name, 'runner_year': runner_year, 'runner_school': runner_school, 'finish_time': finish_time, 'runner_gender': runner_gender}
 	
+	
 	if verbose == True:
 		print "Race Scraper summary for: "
 		print meet_name, ' meet id: ', meet_id,
@@ -135,11 +136,13 @@ def runner_id_generator(name, school):
 		id += split_name[0][0:3].lower()
 		id += split_name[1][0:3].lower()
 		id += split_school[0][0].upper()
-		try:
-			id += split_school[1][0].upper()
-		except IndexError:
-			pass
 		
+		if len(split_school) != 1 and split_school[1][0] != '(':
+			try:
+				id += split_school[1][0].upper()
+			except IndexError:
+				pass
+
 		generated_ids.append(id)
 		
 	return generated_ids
@@ -156,7 +159,7 @@ def write_to_csv(data, distance, permission, meetcsv = '', runnercsv = '', timec
 	if meetcsv != '':
 		with open(meetcsv, permission) as meet_info:
 			meet_writer = csv.DictWriter(meet_info, fieldnames = ['meet_id', 'meet_name', 'day_temperature', 'date_of_race', 'total_finishers', 'total_races', 'race_level'])
-			if permission == 'w':
+			if permission == 'wb':
 				meet_writer.writeheader()
 			
 			meet_writer.writerow({'meet_id': data['meet_id'], 'meet_name': data['meet_name'], 'date_of_race': data['date_of_race'],
@@ -167,7 +170,7 @@ def write_to_csv(data, distance, permission, meetcsv = '', runnercsv = '', timec
 		run_keys = sorted(data['data'].keys())
 		with open(runnercsv, permission) as runner_info:
 			runner_writer = csv.writer(runner_info)
-			if permission == 'w':
+			if permission == 'wb':
 				runner_writer.writerow(run_keys)
 			runner_writer.writerows(zip(*[data['data'][key] for key in run_keys]))
 		
@@ -188,7 +191,7 @@ def write_to_csv(data, distance, permission, meetcsv = '', runnercsv = '', timec
 		with open(timecsv, permission) as time_info:
 			time_writer = csv.writer(time_info)
 
-			if permission == 'w':
+			if permission == 'wb':
 				time_writer.writerow(['runner_id', 'VHSL_group', 'meet_id', 'race_distance', 'finish_time'])
 	
 			time_writer.writerows(zip(runids,totallevel,totalmeetids,totaldist,finishtime))
@@ -219,9 +222,14 @@ def meet_id_generator(meet, date):
 	
 	#create the race id
 	raceid = ''
+	
+	
 	#append the first letters of every word in the title
-	for x in split_name:
-			raceid += x[0].lower()
+	if len(split_name) == 1:
+		raceid += split_name[0].lower()
+	elif len(split_name) >= 2:
+		raceid += split_name[0].lower()
+		raceid += split_name[1].lower()	
 	#add the year
 	#2-5 is the last two characters if the date string
 	#get the date
@@ -238,16 +246,29 @@ def meet_id_generator(meet, date):
 	
 	#clean the race level off the race name string
 	del split_name[len(split_name) - 1]
-	meetname = ' '.join(split_name)
+	cleanedname = ' '.join(split_name)
 
-	return meetname, racelevel, raceid
+	return cleanedname, racelevel, raceid
 
 def vhsl_level_finder(meet):
-	level_index = ['1A','2A','3A','4A','5A','6A'] 
+	'''
+	Will check if any of the VHSL groups are labeled in the race name
+	return the group
+	'''
+	group_index = ['1A','2A','3A','4A','5A','6A'] 
 	split_meet = meet.split(' ')
 	
-	if split_meet[1] in level_index:
-		level = split_meet[1]
-	else:
-		level = ''
-	return level
+	for x in split_meet:
+		if x in group_index:
+			group = x
+		else:
+			pass
+	return group
+
+def format_for_JSON(data):
+	'''
+	Takes the dictionary from meet_data_scraper and formats it for JSON export
+	
+	returns a JSON compatible dictionary
+	'''
+	
