@@ -22,6 +22,7 @@ def meet_data_scraper(url, verbose = False):
 	page_source = bs(get(url).text, 'html.parser')
 
 	#create the dict/lists to be appended to the various csv documents
+	finish_place = []
 	runner_year = []
 	runner_name = []
 	runner_school = []
@@ -62,8 +63,9 @@ def meet_data_scraper(url, verbose = False):
 		try:
 			if len(m_runners[pos].find_all('a')) == 3:
 				athlete = m_runners[pos].find_all('a')
-				year_placeholder = m_runners[pos].find_all('td')[1:2]
-				runner_year.append(str(year_placeholder[0].text))
+				year_placeholder = m_runners[pos].find_all('td')
+				finish_place.append(place_to_int(year_placeholder[0].text))
+				runner_year.append(str(year_placeholder[1].text))
 				runner_name.append(str(athlete[0].text))
 				scrubbed_time = pr_scrubber(str(athlete[1].text))
 				finish_time.append(scrubbed_time)
@@ -82,8 +84,9 @@ def meet_data_scraper(url, verbose = False):
 		try:
 			if len(f_runners[pos].find_all('a')) == 3:
 				athlete = f_runners[pos].find_all('a')
-				year_placeholder = f_runners[pos].find_all('td')[1:2]
-				runner_year.append(str(year_placeholder[0].text))
+				year_placeholder = f_runners[pos].find_all('td')
+				finish_place.append(place_to_int(year_placeholder[0].text))
+				runner_year.append(str(year_placeholder[1].text))
 				runner_name.append(str(athlete[0].text))
 				scrubbed_time = pr_scrubber(str(athlete[1].text))
 				finish_time.append(scrubbed_time)
@@ -97,8 +100,12 @@ def meet_data_scraper(url, verbose = False):
 	#generate a list of ids for each runner
 	runner_ids = runner_id_generator(runner_name, runner_school)
 
-	data_dict = {'runner_ids': runner_ids, 'runner_name': runner_name, 'runner_year': runner_year, 'runner_school': runner_school, 'finish_time': finish_time, 'runner_gender': runner_gender}
+	data_dict = {'finish_place': finish_place, 'runner_ids': runner_ids, 'runner_name': runner_name, 'runner_year': runner_year, 'runner_school': runner_school, 'finish_time': finish_time, 'runner_gender': runner_gender,
+	'vhsl_group': [], 'meet_id': []}
 	
+	for x in range(1, len(data_dict['runner_name'])):
+		data_dict['vhsl_group'].append(vhsl_level)
+		data_dict['meet_id'].append(meet_id)
 	
 	if verbose == True:
 		print "Race Scraper summary for: "
@@ -265,10 +272,45 @@ def vhsl_level_finder(meet):
 			pass
 	return group
 
-def format_for_JSON(data):
-	'''
-	Takes the dictionary from meet_data_scraper and formats it for JSON export
+def place_to_int(place):
+	finish_place = int(place.split('.')[0])
+	return finish_place
 	
-	returns a JSON compatible dictionary
-	'''
+	
+'''
+def format_for_JSON(data, file, permission):
+	
+	#Takes the dictionary from meet_data_scraper and formats it for JSON export
+	
+	#returns a JSON compatible dictionary
+	
+	#make the initial levels of data
+	db = {}
+	db['meets'] = {}
+	db['runners'] = {}
+	
+	db['meets'].append({
+	'meet_id': data['meet_id'],
+	'meet_name': data['meet_name'],
+	'race_level': data['race_level'],
+	'date_of_race': data['date_of_race']})
+	
+	dat = data['data']
+	x = 0
+	while x < len(dat['runner_ids']):
+		db['runners'].append({
+		'id': dat['runner_ids'][x],
+		'name': dat['runner_name'][x],
+		'school': dat['runner_school'][x],
+		'gender': dat['runner_gender'][x],
+		'times': {}})
+		
+		
+		db['runners'][x]['times'].append({
+		x+=1
+	
+	return db
+'''	
+	
+	
 	
