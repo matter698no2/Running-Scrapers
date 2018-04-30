@@ -10,7 +10,8 @@ Created by: Matthew Rogers
 def meet_data_scraper(url, verbose = False):
 	'''
 	See above for greater detail in functionality
-
+	
+	NOTE: This is taylor made for the results page of Athletic.net
 	verbose will print a summary of the meet if set to true
 	'''
 	#import the required libraries

@@ -1,6 +1,9 @@
 # Running Scrapers
 meet-scraper.py contains the master list of functions
 
+### Quick Note
+This is taylor made for the results page of Athletic.net, it will work on any meet from their site, but not outside of it. The VHSL 
+
 ## List of functions
 1. meet_data_scraper(url, verbose)
 takes a url as a string and gathers:
@@ -37,5 +40,4 @@ This returns:
 ## Planned Features
 Just to keep track of the stuff I want to add or improve
  - Mark whether a runner ran a PR at the meet
- - Get the runner's grade (if applicable)
  - General debugging and scenario checking
